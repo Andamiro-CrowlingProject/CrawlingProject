@@ -1,1 +1,1 @@
-# Google Image Downloader
+# Auto Google Image Download every day
