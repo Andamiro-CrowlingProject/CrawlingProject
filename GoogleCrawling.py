@@ -109,6 +109,6 @@ for image in images_area:
         print(e)
 
 end_time = time.time()
-print('Loading time :', end_time - start_time, 'second')
+print('Loading time:',end_time - start_time,'second')
 
 driver.close()
