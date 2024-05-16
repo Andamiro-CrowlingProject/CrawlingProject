@@ -12,15 +12,21 @@ import sys
 import os
 import re
 import time
+import urllib.request
+import random
 
 # Headless 모두를 위한 옵션 설정
 chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--incognito")
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-setuid-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_experimental_option('excludeSwitches',['enable-logging'])
+# chrome_options.add_argument("--incognito")
+# chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--no-sandbox")
+# chrome_options.add_argument("--disable-setuid-sandbox")
+# chrome_options.add_argument("--disable-dev-shm-usage")
+# chrome_options.add_experimental_option('excludeSwitches',['enable-logging'])
+
+# USer-Agent 설정
+# user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+# chrome_options.add_argument(f'user-agent = {user_agent}')
 
 # 브라우저 환경을 통해 크롬드라이버 환경을 자동으로 설정
 driver = webdriver.Chrome(service = Service(ChromeDriverManager().install()), options = chrome_options)
@@ -38,21 +44,34 @@ url = 'https://www.google.com/'
 
 # driver 설정
 driver.get(url)
+print("Google 홈페이지로 이동")
 
 # 검색어 입력 및 제출
 search_bar = driver.find_element(By.NAME,'q')
 search_bar.send_keys(search_word)
 search_bar.submit()
+print(f"검색창에 '{search_word}' 입력 및 제출 완료")
 time.sleep(1)  
 
 # '이미지' 탭으로 이동
-images_tab = WebDriverWait(driver, 10).until(
+try:
+    images_tab = WebDriverWait(driver, 10).until(
     EC.element_to_be_clickable((By.LINK_TEXT, '이미지'))
-)
-images_tab.click()
+    )
+    images_tab.click()
+except:
+    try:
+        images_tab = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(By.LINK_TEXT, 'Images')
+        )
+        images_tab.click()
+    except:
+        print("'이미지' 탭을 찾을 수 없습니다.")
+        driver.quit()
+print("'이미지' 탭으로 이동 완료")
 
 # 스크롤 다운을 통한 이미지 로딩 개선
-scroll_pause_time = 2  # 스크롤 사이의 대기 시간
+scroll_pause_time = 3  # 스크롤 사이의 대기 시간
 last_height = driver.execute_script("return document.body.scrollHeight")
 
 while True:
@@ -62,25 +81,49 @@ while True:
     if new_height == last_height:
         break
     last_height = new_height
+print("스크롤 완료")
 
-# 이미지 URL 수집
-web = driver.page_source
-source = BeautifulSoup(web, 'html.parser')
-image_elements = source.find_all('img', {'class':'YQ4gaf'})
-image_urls = set()
-for img in image_elements:
-    src = img.get('src') or img.get('data-src')  # 'src' 또는 'data-src' 속성에서 URL 가져옴
-    if src:
-        image_urls.add(src)
+image_count_num = 0
+successful_downloads = 0 # 다운로드된 이미지 개수 추적
+max_images = 50 # 최대 다운로드할 이미지 수
+
+# 썸네일 이미지 URL 수집
+thumbnails_list = driver.find_elements(By.CSS_SELECTOR, ".YQ4gaf")
+print(len(thumbnails_list))
+num_thumbnails = len(thumbnails_list)
+if num_thumbnails == 0:
+    print("수집된 이미지 url이 없습니다. 프로그램을 종료합니다")
+    driver.quit()
+    sys.exit()
+else: 
+    print(f"이미지 url {num_thumbnails}개 수집 완료")
 
 # 이미지 다운로드
-for i, url in enumerate(image_urls):
+for img in thumbnails_list:
+    if successful_downloads >= max_images:
+        break
+    image_count_num += 1
     try:
-        response = requests.get(url)
-        with open(os.path.join(download_path, f'{search_word}_{i}.jpg'), 'wb') as f:
-            f.write(response.content)
+        img_url = img.get_attribute("src") or img.get_attribute("data-src") # 썸네일 주소 받기
+        if img_url and img_url.startswith('http'):
+            print(f"다운로드 시도 중인 이미지 URL: {img_url}")
+            time.sleep(1)
+            try:
+                img_path = os.path.join(download_path, f"{search_word}_{image_count_num}.jpg")
+                urllib.request.urlretrieve(img_url, img_path)
+                print(f"이미지 저장 완료: {search_word}_{image_count_num}.jpg")
+                image_count_num += 1
+                # 파일이 실제로 생성되었는지 확인
+                if os.path.exists(img_path):
+                    print(f"이미지 저장 완료: {img_path}")
+                    successful_downloads += 1 # 성공한 다운로드 개수 증가
+                else:
+                    print(f"이미지 저장 실패: {img_path}")
+            except:
+                print(f"이미지 다운로드 중 오류 발생: {e}")
     except Exception as e:
-        print(f"Error downloading {url}: {e}")
+        print(f"{image_count_num}번째 이미지 다운로드 오류 발생: {e}")
+print(f"성공한 다운르드 수: {successful_downloads}개")
 
 driver.quit()
-print("done")
+print("다운로드 완료")
