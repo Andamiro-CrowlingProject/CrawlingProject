@@ -1,0 +1,10 @@
+README.md
+setup.cfg
+setup.py
+src/orange/__init__.py
+src/orange/mycal.py
+src/orange.egg-info/PKG-INFO
+src/orange.egg-info/SOURCES.txt
+src/orange.egg-info/dependency_links.txt
+src/orange.egg-info/requires.txt
+src/orange.egg-info/top_level.txt
