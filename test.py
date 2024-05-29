@@ -5,15 +5,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from bs4 import BeautifulSoup
-import requests
+import chromedriver_autoinstaller  # setup chrome options
 import sys
 import os
-import re
 import time
 import urllib.request
-import random
 
 # Headless 모두를 위한 옵션 설정
 chrome_options = webdriver.ChromeOptions()
@@ -28,11 +24,12 @@ chrome_options = webdriver.ChromeOptions()
 # user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 # chrome_options.add_argument(f'user-agent = {user_agent}')
 
-# 브라우저 환경을 통해 크롬드라이버 환경을 자동으로 설정
-driver = webdriver.Chrome(service = Service(ChromeDriverManager().install()), options = chrome_options)
+# 크롤링을 위한 ChromeDriver 자동 설치
+chromedriver_autoinstaller.install()
+driver = webdriver.Chrome(options=chrome_options)
 
 # 사용자 입력을 통해 검색어 및 저장 경로 설정
-search_word = input("Please enter your search word: ")
+search_word = input("검색어를 입력하세요: ")
 download_path = f'./image/{search_word}'
 
 # 이미지를 저장할 디렉토리가 없을 경우 생성
@@ -53,7 +50,7 @@ search_bar.submit()
 print(f"검색창에 '{search_word}' 입력 및 제출 완료")
 time.sleep(1)  
 
-# '이미지' 탭으로 이동
+# '이미지' 탭으로 이동(현지 언어 지원)
 try:
     images_tab = WebDriverWait(driver, 10).until(
     EC.element_to_be_clickable((By.LINK_TEXT, '이미지'))
@@ -83,10 +80,6 @@ while True:
     last_height = new_height
 print("스크롤 완료")
 
-image_count_num = 0
-successful_downloads = 0 # 다운로드된 이미지 개수 추적
-max_images = 50 # 최대 다운로드할 이미지 수
-
 # 썸네일 이미지 URL 수집
 thumbnails_list = driver.find_elements(By.CSS_SELECTOR, ".YQ4gaf")
 print(len(thumbnails_list))
@@ -99,30 +92,36 @@ else:
     print(f"이미지 url {num_thumbnails}개 수집 완료")
 
 # 이미지 다운로드
+image_count_num = 0
+successful_downloads = 0 # 다운로드된 이미지 개수 추적
+max_images = 50 # 최대 다운로드할 이미지 수
+
 for img in thumbnails_list:
     if successful_downloads >= max_images:
         break
     image_count_num += 1
     try:
-        img_url = img.get_attribute("src") or img.get_attribute("data-src") # 썸네일 주소 받기
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable(img)).click()
+        time.sleep(2) # 원본 이미지가 로드될 때까지 충분히 기다림
+        large_img = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "img.Q4LuWd"))
+        )
+        img_url = large_img.get_attribute("src") # 원본 이미지 주소 받기
         if img_url and img_url.startswith('http'):
             print(f"다운로드 시도 중인 이미지 URL: {img_url}")
             time.sleep(1)
-            try:
-                img_path = os.path.join(download_path, f"{search_word}_{image_count_num}.jpg")
-                urllib.request.urlretrieve(img_url, img_path)
-                print(f"이미지 저장 완료: {search_word}_{image_count_num}.jpg")
-                image_count_num += 1
-                # 파일이 실제로 생성되었는지 확인
-                if os.path.exists(img_path):
-                    print(f"이미지 저장 완료: {img_path}")
-                    successful_downloads += 1 # 성공한 다운로드 개수 증가
-                else:
-                    print(f"이미지 저장 실패: {img_path}")
-            except:
-                print(f"이미지 다운로드 중 오류 발생: {e}")
+            img_path = os.path.join(download_path, f"{search_word}_{image_count_num}.jpg")
+            urllib.request.urlretrieve(img_url, img_path)
+            print(f"이미지 저장 완료: {search_word}_{image_count_num}.jpg")
+            # 파일이 실제로 생성되었는지 확인
+            if os.path.exists(img_path):
+                print(f"이미지 저장 완료: {img_path}")
+                successful_downloads += 1 # 성공한 다운로드 개수 증가
+            else:
+                print(f"이미지 저장 실패: {img_path}")
     except Exception as e:
         print(f"{image_count_num}번째 이미지 다운로드 오류 발생: {e}")
+        
 print(f"성공한 다운르드 수: {successful_downloads}개")
 
 driver.quit()
