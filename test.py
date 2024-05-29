@@ -94,7 +94,8 @@ else:
 # 이미지 다운로드
 image_count_num = 0
 successful_downloads = 0 # 다운로드된 이미지 개수 추적
-max_images = 50 # 최대 다운로드할 이미지 수
+max_images = 20 # 최대 다운로드할 이미지 수
+downloaded_urls = set() # 다운로드된 이미지 URL을 저장하는 집합
 
 for img in thumbnails_list:
     if successful_downloads >= max_images:
@@ -107,7 +108,7 @@ for img in thumbnails_list:
             EC.presence_of_element_located((By.XPATH, '//*[@id="Sva75c"]/div[2]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[3]/div[1]/a/img[1]'))
         )
         img_url = large_img.get_attribute("src") # 원본 이미지 주소 받기
-        if img_url and img_url.startswith('http'):
+        if img_url and img_url.startswith('http') and img_url not in downloaded_urls:
             print(f"다운로드 시도 중인 이미지 URL: {img_url}")
             time.sleep(1)
             img_path = os.path.join(download_path, f"{search_word}_{image_count_num}.jpg")
@@ -117,6 +118,7 @@ for img in thumbnails_list:
             if os.path.exists(img_path):
                 print(f"이미지 저장 완료: {img_path}")
                 successful_downloads += 1 # 성공한 다운로드 개수 증가
+                downloaded_urls.add(img_url) # URL을 집합에 추가
             else:
                 print(f"이미지 저장 실패: {img_path}")
     except Exception as e:
