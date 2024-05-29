@@ -53,7 +53,7 @@ time.sleep(1)
 # '이미지' 탭으로 이동(현지 언어 지원)
 try:
     images_tab = WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.LINK_TEXT, '이미지'))
+        EC.element_to_be_clickable((By.LINK_TEXT, '이미지'))
     )
     images_tab.click()
 except:
@@ -81,7 +81,7 @@ while True:
 print("스크롤 완료")
 
 # 썸네일 이미지 URL 수집
-thumbnails_list = driver.find_elements(By.CSS_SELECTOR, "img.Q4LuWd")
+thumbnails_list = driver.find_elements(By.CSS_SELECTOR, '.YQ4gaf')
 print(len(thumbnails_list))
 num_thumbnails = len(thumbnails_list)
 if num_thumbnails == 0:
@@ -104,7 +104,7 @@ for img in thumbnails_list:
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable(img)).click()
         time.sleep(2) # 원본 이미지가 로드될 때까지 충분히 기다림
         large_img = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "img.n3VNCb"))
+            EC.presence_of_element_located((By.XPATH, '//*[@id="Sva75c"]/div[2]/div[2]/div[2]/div[2]/c-wiz/div/div/div/div/div[3]/div[1]/a/img[1]'))
         )
         img_url = large_img.get_attribute("src") # 원본 이미지 주소 받기
         if img_url and img_url.startswith('http'):
