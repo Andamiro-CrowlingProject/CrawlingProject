@@ -10,6 +10,7 @@ import sys
 import os
 import time
 import urllib.request
+import csv
 
 # Headless 모두를 위한 옵션 설정
 chrome_options = webdriver.ChromeOptions()
@@ -31,10 +32,15 @@ driver = webdriver.Chrome(options=chrome_options)
 # 사용자 입력을 통해 검색어 및 저장 경로 설정
 search_word = input("검색어를 입력하세요: ")
 download_path = f'./image/{search_word}'
+download_urls_path = f'./urls/{search_word}'
 
 # 이미지를 저장할 디렉토리가 없을 경우 생성
 if not os.path.exists(download_path):
     os.makedirs(download_path)
+    
+# 다운로드 이미지 경로를 저장할 디렉토리가 없을 경우 생성
+if not os.path.exists(download_urls_path):
+    os.makedirs(download_urls_path)
 
 # google url 설정
 url = 'https://www.google.com/'
@@ -67,7 +73,7 @@ except:
         driver.quit()
 print("'이미지' 탭으로 이동 완료")
 
-# 스크롤 다운을 통한 이미지 로딩 개선
+# 스크롤 다운을 통한 이미지 로딩
 scroll_pause_time = 3  # 스크롤 사이의 대기 시간
 last_height = driver.execute_script("return document.body.scrollHeight")
 
@@ -123,8 +129,17 @@ for img in thumbnails_list:
                 print(f"이미지 저장 실패: {img_path}")
     except Exception as e:
         print(f"{image_count_num}번째 이미지 다운로드 오류 발생: {e}")
+
+# 다운로드된 URL을 CSV 파일로 저장
+urls_csv_file_path = os.path.join(download_urls_path, f"{search_word}_downloaded_urls.csv")
+with open(urls_csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+    csvwriter = csv.writer(csvfile)
+    csvwriter.writerow(['Image URL'])
+    for url in downloaded_urls:
+        csvwriter.writerow([url])
         
 print(f"성공한 다운르드 수: {successful_downloads}개")
+print(f"다운로드된 이미지 URL이 CSV 파일에 저장되었습니다: {urls_csv_file_path}")
 
 driver.quit()
 print("다운로드 완료")
