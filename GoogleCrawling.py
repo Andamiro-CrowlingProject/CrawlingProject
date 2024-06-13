@@ -1,5 +1,5 @@
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -10,11 +10,20 @@ import requests
 
 import traceback
 
+import cv2
+# from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
+# from tensorflow.keras.preprocessing import image
+# from sklearn.metrics.pairwise import cosine_similarity
+from itertools import combinations
+from PIL import Image 
+import os
+from itertools import combinations
+
 import sys
 import os
-import re
 import time
 import pandas as pd
+import numpy as np
 
 def setup_crawling():
     # 크롬 옵션 설정
@@ -22,8 +31,8 @@ def setup_crawling():
     chrome_options.add_argument("--disable-popup-blocking") # 팝업창 차단 설정
     chrome_options.add_argument("--disable-notifications") # 알림 요청 차단
     chrome_options.add_argument('--no-sandbox')
-    # chrome_options.add_argument("--headless")  # headless 모드 설정
-    # chrome_options.add_argument("--window-size=1920x1080")  # headless 모드에서 창 크기 설정
+    chrome_options.add_argument("--headless")  # headless 모드 설정
+    chrome_options.add_argument("--window-size=1920x1080")  # headless 모드에서 창 크기 설정
 
     # ChromeDriver 자동 설치 및 경로 가져오기
     chrome_driver_path = chromedriver_autoinstaller.install()
@@ -36,7 +45,7 @@ def setup_crawling():
     
     return driver
 
-def crawl_images(driver, search_query, max_images, search_time=0.5, wait_time=2, scroll_pause_time=5):
+def crawl_images(driver, search_query, max_images=10, search_time=0.5, wait_time=2, scroll_pause_time=5):
     # Google URL
     url = 'https://www.google.com/'
 
@@ -138,11 +147,20 @@ def crawl_images(driver, search_query, max_images, search_time=0.5, wait_time=2,
     return url_list
 
 def save_images(search_query, download_path, url_list, max_images):
-    # 이미지를 저장할 폴더 생성(없을 경우)
+    # CrawlingImage 폴더 경로 설정
+    crawling_image_path = os.path.join(download_path, 'CrawlingImage')
+
+    # CrawlingImage 폴더가 없으면 생성
+    if not os.path.exists(crawling_image_path):
+        os.makedirs(crawling_image_path)
+
+    # search_query 폴더 경로 설정
+    download_path = os.path.join(crawling_image_path, search_query)
+
+    # search_query 폴더가 없으면 생성, 있으면 모든 파일 삭제
     if not os.path.exists(download_path):
         os.makedirs(download_path)
     else:
-        # 폴더가 이미 존재하면 폴더 내의 모든 파일 삭제
         print('기존의 파일 삭제 후 작업 시행합니다.')
         for file_name in os.listdir(download_path):
             file_path = os.path.join(download_path, file_name)
@@ -176,14 +194,20 @@ def save_images(search_query, download_path, url_list, max_images):
 
     # URL 리스트를 CSV 파일로 저장
     image_num = [f'{search_query}_{num}' for num in range(1, count)]
-    url_df = pd.DataFrame({'image_name': image_num, 'imgUrl': [url[0] for url in url_list[:count-1]], 'siteUrl': [url[1] for url in url_list[:count-1]]})
+    url_df = pd.DataFrame({
+        'image_name': image_num,
+        'imgUrl': [url[0] for url in url_list[:count-1]],
+        'siteUrl': [url[1] for url in url_list[:count-1]]
+    })
     url_df.to_csv(os.path.join(download_path, 'image_url.csv'), index=False)
     print("CSV file saved: image_url.csv")
 
 
-def find_duplicates(download_path):
+def find_duplicates(download_path, similarity_threshold=30):
+    print("중복 이미지 검출 중입니다.")
+    
     # 이미지 파일 읽기
-    images = [file for file in os.listdir(download_path) if file.endswith(('.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'))]
+    images = [file for file in os.listdir(download_path) if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'))]
     image_paths = [os.path.join(download_path, img) for img in images]
 
     # ORB 디텍터 생성
@@ -193,12 +217,18 @@ def find_duplicates(download_path):
     descriptors = []
     for image_path in image_paths:
         img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            print(f"이미지를 읽을 수 없습니다: {image_path}")
+            continue
         _, des = orb.detectAndCompute(img, None)
-        descriptors.append(des)
+        descriptors.append((image_path, des))
 
     # 모든 이미지 쌍에 대해 유사도 계산
     duplicates = []
-    for (img1, des1), (img2, des2) in combinations(zip(image_paths, descriptors), 2):
+    for (img1, des1), (img2, des2) in combinations(descriptors, 2):
+        if des1 is None or des2 is None:
+            continue
+        
         # BFMatcher : 전수 조사 매칭(객체 인식&추적)
         bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
         matches = bf.match(des1, des2)
@@ -207,16 +237,36 @@ def find_duplicates(download_path):
         similarity = len(matches)
 
         # 유사도가 특정 임계값 이상이면 중복으로 간주
-        if similarity > 1:  
+        if similarity > similarity_threshold:  
             duplicates.append((img1, img2))
 
-    return duplicates
+    if duplicates:
+        for dup in duplicates:
+            print(f"중복된 이미지: {dup[0]} and {dup[1]}")
+    else:
+        print("중복된 이미지가 없습니다.")
 
 
-duplicates = find_duplicates(download_path)
+if __name__ == "__main__":
 
-if duplicates:
-    for dup in duplicates:
-        print(f"중복된 이미지: {dup[0]} and {dup[1]}")
-else:
-    print("중복된 이미지가 없습니다.")
+    # 입력값 설정
+    search_query = input('검색할 내용을 입력해주세요 : ')
+    max_images = int(input('수집을 원하시는 이미지 갯수을 입력해주세요 : '))
+    path = input('저장 경로를 설정해주세요 :') + '\\CrawlingImage\\'
+    download_path = path + f'{search_query}'
+
+    # 드라이버 셋업
+    driver = setup_crawling()
+
+    try:
+        # 크롤링
+        url_list = crawl_images(driver, search_query, max_images)
+        
+        # 이미지 저장
+        save_images(search_query, download_path, url_list, max_images)
+
+        # 중복찾기
+        find_duplicates(download_path)
+
+    except Exception as e:
+        print("An error occurred:", e)
