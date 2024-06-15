@@ -178,6 +178,9 @@ class GoogleCrawling:
             url_list (list): 이미지 URL 및 사이트 URL 리스트.
             max_images (int): 다운로드할 최대 이미지 수.
         """
+
+    
+
         # search_query 폴더가 없으면 생성, 있으면 모든 파일 삭제
         if not os.path.exists(download_path):
             os.makedirs(download_path)
