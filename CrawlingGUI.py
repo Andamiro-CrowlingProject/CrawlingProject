@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLineEdit, QPushButton, QApplication, QMessageBox, QMainWindow)
+from PyQt5.QtWidgets import (QWidget, QLabel, QVBoxLayout, QLineEdit, QPushButton, QApplication, QMessageBox, QFrame)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QGuiApplication
 import requests
@@ -14,7 +14,6 @@ from selenium.webdriver.chrome.service import Service
 import chromedriver_autoinstaller  # setup chrome options
 import requests
 
-import traceback
 
 import cv2
 # from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
@@ -30,8 +29,8 @@ import os
 import time
 import pandas as pd
 import numpy as np
+import base64
 
-import GoogleCrawling
 
 class GoogleCrawling:
     """
@@ -227,7 +226,7 @@ class GoogleCrawling:
             'imgUrl': [url[0] for url in url_list[:count-1]],
             'siteUrl': [url[1] for url in url_list[:count-1]]
         })
-        url_df.to_csv(os.path.join(download_path, 'image_url.csv'), index=False)
+        url_df.to_csv(os.path.join(download_path, 'image_url.csv'), encoding='utf-8-sig', index=False)
         print("CSV file saved: image_url.csv")
 
 
@@ -240,6 +239,7 @@ class GoogleCrawling:
             similarity_threshold (int): 유사도 임계값.
         """
         print("중복 이미지 검출 중입니다.")
+    
         
         # 이미지 파일 읽기
         images = [file for file in os.listdir(download_path) if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'))]
@@ -316,10 +316,27 @@ class MyApp(QWidget):
         self.btn_search = QPushButton('검색', self)
         self.btn_search.clicked.connect(self.start_crawling)
         
+        self.lbl_link = QLabel(self)
+        self.lbl_link.setOpenExternalLinks(True)  # 하이퍼링크를 클릭할 수 있도록 설정
+
+        # 선 추가 함수
+        def add_line():
+            line = QFrame()
+            line.setFrameShape(QFrame.HLine)
+            line.setFrameShadow(QFrame.Sunken)
+            layout.addWidget(line)
+
+        # 폼 구성
+        layout.addStretch(1)  # 가변적인 공간 추가     
         layout.addWidget(self.le_search)
+        layout.addStretch(1)  # 가변적인 공간 추가        
         layout.addWidget(self.le_num)
+        layout.addStretch(1)  # 가변적인 공간 추가
         layout.addWidget(self.le_path)
+        layout.addStretch(1)  # 가변적인 공간 추가
         layout.addWidget(self.btn_search)
+        add_line()
+        layout.addWidget(self.lbl_link)  # QLabel을 레이아웃에 추가
         
         self.setLayout(layout)
         
@@ -344,7 +361,8 @@ class MyApp(QWidget):
         except ValueError:
             QMessageBox.warning(self, '입력 오류', '이미지 개수는 숫자로 입력해주세요.')
             return
-        download_path = self.le_path.text()
+        path = self.le_path.text() + '\\CrawlingImage\\' 
+        download_path = path + f'{search_query}'
 
         # 크롤링
         try:
@@ -358,8 +376,11 @@ class MyApp(QWidget):
 
         if url_list:
             QMessageBox.information(self, '완료', f'총 {len(url_list)}개의 이미지를 수집했습니다.')
+            # 저장된 경로로 이동할 수 있는 하이퍼링크 설정
+            self.lbl_link.setText(f'<a href="file:///{download_path}">저장된 이미지 폴더 열기</a>')
         else:
             QMessageBox.warning(self, '실패', '이미지 수집에 실패했습니다.')
+            self.lbl_link.clear()  # 실패 시 하이퍼링크 제거
 
 
 
