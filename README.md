@@ -1,2 +1,2 @@
-# AGIDE(아지드)
-# Auto Google Image Download every day
+# GIDE(기드)
+# Google Image Download Easily
