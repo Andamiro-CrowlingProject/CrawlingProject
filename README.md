@@ -43,5 +43,11 @@ pip install PyQt5 selenium chromedriver-autoinstaller requests opencv-python-hea
 - Chrome 브라우저를 사용하여 크롤링을 수행합니다. Google Chrome이 설치되어 있는지 확인하세요.
 - 'chromedriver-autoinstaller' 패키지는 적절한 버전의 ChromeDriver를 자동으로 다운로드합니다.
 
+### 활용방안
+
+#### 스케줄링을 통한 자동 이미지 다운로드
+
+로컬에서 스케줄링을 통해 자동으로 이미지를 다운로드할 수 있습니다.
+
 ### 라이센스
 이 프로젝트는 MIT 라이센스에 따라 라이센스가 부여됩니다. 자세한 내용은 LICENSE 파일을 참고하세요.
