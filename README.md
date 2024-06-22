@@ -1,6 +1,8 @@
 # AGID(아지드)
 ## Auto Google Image Download Easily
 
+<img width="461" alt="2" src="https://github.com/Andamiro-CrowlingProject/CrawlingProject/assets/165745047/9568b9a3-e73d-404a-a2cb-6841ccb8d61a">
+
 사용자의 검색어를 바탕으로 구글에서 이미지를 크롤링하고, 로컬에 저장하며, 중복된 이미지를 찾을 수 있도록 합니다. 코드는 Python, PyQt5를 사용한 GUI, Selenium을 통한 웹 크롤링, OpenCV를 이용한 이미지 처리로 구성되어 있습니다.
 
 ### 기능
@@ -29,6 +31,9 @@ pip install PyQt5 selenium chromedriver-autoinstaller requests opencv-python-hea
 ```
 
 ### 사용법
+
+![1](https://github.com/Andamiro-CrowlingProject/CrawlingProject/assets/165745047/c0677807-8983-40ec-ae48-fb329b83134f)
+
 - 검색어: 크롤링할 이미지의 검색어를 입력합니다.
 - 이미지 개수: 다운로드할 이미지의 개수를 입력합니다.
 - 저장 경로: 다운로드한 이미지를 저장할 경로를 입력합니다.
