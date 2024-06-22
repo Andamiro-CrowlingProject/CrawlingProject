@@ -1,1 +1,0 @@
-from.mycal import triangle_area
