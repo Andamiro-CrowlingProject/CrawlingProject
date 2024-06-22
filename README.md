@@ -1,7 +1,7 @@
 # AGIDE(아지드)
 ## Auto Google Image Download Easily
 
-<img width="461" alt="2" src="https://github.com/Andamiro-CrowlingProject/CrawlingProject/assets/165745047/9568b9a3-e73d-404a-a2cb-6841ccb8d61a">
+![AGIDE cover image](https://github.com/Andamiro-CrowlingProject/CrawlingProject/assets/169072949/ae605bc1-179e-448c-927d-1182f314dfc2)
 
 사용자의 검색어를 바탕으로 구글에서 이미지를 크롤링하고, 로컬에 저장하며, 중복된 이미지를 찾을 수 있도록 합니다. 코드는 Python, PyQt5를 사용한 GUI, Selenium을 통한 웹 크롤링, OpenCV를 이용한 이미지 처리로 구성되어 있습니다.
 
