@@ -1,4 +1,4 @@
-# AGID(아지드)
+# AGIDE(아지드)
 ## Auto Google Image Download Easily
 
 <img width="461" alt="2" src="https://github.com/Andamiro-CrowlingProject/CrawlingProject/assets/165745047/9568b9a3-e73d-404a-a2cb-6841ccb8d61a">
