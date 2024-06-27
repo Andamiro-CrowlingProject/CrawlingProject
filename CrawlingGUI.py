@@ -1,7 +1,11 @@
 import sys
-from PyQt5.QtWidgets import (QWidget, QLabel, QVBoxLayout, QLineEdit, QPushButton, QApplication, QMessageBox, QFrame)
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QGuiApplication
+import webbrowser
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel, QTextEdit, QFrame, QApplication, QDialog, QHBoxLayout)
+
+from PyQt5.QtGui import QGuiApplication, QTextCursor
+from PyQt5.QtCore import QTimer
+
 import requests
 
 from selenium import webdriver
@@ -27,6 +31,7 @@ from itertools import combinations
 import sys
 import os
 import time
+import csv
 import pandas as pd
 import numpy as np
 import base64
@@ -279,27 +284,43 @@ class GoogleCrawling:
             for dup in duplicates:
                 print(f"중복된 이미지: {dup[0]} and {dup[1]}")
         else:
+            print()
             print("중복된 이미지가 없습니다.")
 
 
-class MyApp(QWidget):
-    """
-    MyApp 클래스는 PyQt5를 사용하여 GUI를 생성합니다. 사용자는 검색어, 이미지 개수, 저장 경로를 입력하고
-    '검색' 버튼을 클릭하여 이미지를 크롤링하고 저장할 수 있습니다.
-    """
-    
+class ConsoleOutput(QWidget):
     def __init__(self):
-        """
-        MyApp 클래스의 생성자입니다. 초기화 메서드를 호출하여 UI를 설정합니다.
-        """
         super().__init__()
         self.initUI()
 
     def initUI(self):
-        """
-        UI를 초기화하고 위젯들을 배치합니다.
-        """
-        self.resize(500, 350)
+        self.layout = QVBoxLayout()
+        self.textEdit = QTextEdit(self)
+        self.textEdit.setReadOnly(True)
+        self.layout.addWidget(self.textEdit)
+        self.setLayout(self.layout)
+
+        # 표준 출력과 오류 출력을 리디렉션
+        sys.stdout = self
+        sys.stderr = self
+
+    def write(self, text):
+        self.textEdit.moveCursor(QTextCursor.End)
+        self.textEdit.insertPlainText(text)
+        self.textEdit.moveCursor(QTextCursor.End)
+        QApplication.processEvents()  # 변경된 부분: 각 쓰기 작업 후에 이벤트 처리
+
+    def flush(self):
+        pass
+
+class MyApp(QWidget):
+    
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.resize(500, 500)  # 창 크기를 늘려서 콘솔 출력을 위한 공간 확보
         self.center()
         
         layout = QVBoxLayout()
@@ -319,6 +340,9 @@ class MyApp(QWidget):
         self.lbl_link = QLabel(self)
         self.lbl_link.setOpenExternalLinks(True)  # 하이퍼링크를 클릭할 수 있도록 설정
 
+        # 콘솔 출력을 위한 ConsoleOutput 위젯 추가
+        self.consoleOutput = ConsoleOutput()
+
         # 선 추가 함수
         def add_line():
             line = QFrame()
@@ -335,31 +359,27 @@ class MyApp(QWidget):
         layout.addWidget(self.le_path)
         layout.addStretch(1)  # 가변적인 공간 추가
         layout.addWidget(self.btn_search)
+        # add_line()
+        # layout.addWidget(self.lbl_link)  # QLabel을 레이아웃에 추가
         add_line()
-        layout.addWidget(self.lbl_link)  # QLabel을 레이아웃에 추가
+        layout.addWidget(self.consoleOutput)  # ConsoleOutput을 레이아웃에 추가
         
         self.setLayout(layout)
         
         self.show()
     
     def center(self):
-        """
-        창을 화면의 중앙에 배치합니다.
-        """
         qr = self.frameGeometry()
         cp = QGuiApplication.primaryScreen().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
     def start_crawling(self):
-        """
-        '검색' 버튼 클릭 시 호출됩니다. 입력된 값을 읽고 이미지를 크롤링하여 저장합니다.
-        """
         search_query = self.le_search.text()
         try:
             max_images = int(self.le_num.text())
         except ValueError:
-            QMessageBox.warning(self, '입력 오류', '이미지 개수는 숫자로 입력해주세요.')
+            self.show_message_box('입력 오류', '이미지 개수는 숫자로 입력해주세요.')
             return
         path = self.le_path.text() + '\\CrawlingImage\\' 
         download_path = path + f'{search_query}'
@@ -371,18 +391,47 @@ class MyApp(QWidget):
             GC.save_images(search_query, download_path, url_list, max_images)  # 이미지 저장
             GC.find_duplicates(download_path)  # 중복찾기
         except Exception as e:
-            QMessageBox.critical(self, '오류', f'오류가 발생했습니다: {e}')
+            self.show_message_box('오류', f'오류가 발생했습니다: {e}')
             return
 
         if url_list:
-            QMessageBox.information(self, '완료', f'총 {len(url_list)}개의 이미지를 수집했습니다.')
-            # 저장된 경로로 이동할 수 있는 하이퍼링크 설정
-            self.lbl_link.setText(f'<a href="file:///{download_path}">저장된 이미지 폴더 열기</a>')
+            self.show_custom_dialog(f'총 {len(url_list)}개의 이미지를 수집했습니다.', download_path)
         else:
-            QMessageBox.warning(self, '실패', '이미지 수집에 실패했습니다.')
+            self.show_message_box('실패', '이미지 수집에 실패했습니다.')
             self.lbl_link.clear()  # 실패 시 하이퍼링크 제거
 
+    def show_message_box(self, title, message):
+        dlg = QDialog(self)
+        dlg.setWindowTitle(title)
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(message))
+        btn_ok = QPushButton('확인', dlg)
+        btn_ok.clicked.connect(dlg.accept)
+        layout.addWidget(btn_ok)
+        dlg.setLayout(layout)
+        dlg.exec_()
 
+    def show_custom_dialog(self, message, folder_path):
+        dlg = QDialog(self)
+        dlg.setWindowTitle('완료')
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(message))
+        
+        btn_open_folder = QPushButton('해당 폴더로 이동', dlg)
+        btn_open_folder.clicked.connect(lambda: self.open_folder(folder_path))
+        
+        btn_layout = QHBoxLayout()
+        btn_layout.addWidget(btn_open_folder)
+        
+        layout.addLayout(btn_layout)
+        dlg.setLayout(layout)
+        dlg.exec_()
+
+    def open_folder(self, folder_path):
+        if os.path.exists(folder_path):
+            os.startfile(folder_path)
+        else:
+            self.show_message_box('오류', '폴더를 찾을 수 없습니다.')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
