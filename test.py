@@ -274,6 +274,9 @@ class GoogleCrawling:
             # 유사도가 특정 임계값 이상이면 중복으로 간주
             if similarity > similarity_threshold:  
                 duplicates.append((img1, img2))
+                # 중복 이미지 중 하나를 삭제
+                os.remove(img2)
+                print(f"중복된 이미지 삭제: {img2}")
 
         if duplicates:
             for dup in duplicates:
@@ -397,7 +400,10 @@ class MyApp(QWidget):
         self.list_duplicates.clear()
         if duplicates:
             for img1, img2 in duplicates:
-                item = QListWidgetItem(f"{os.path.basename(img1)} <-> {os.path.basename(img2)}")
+                # 이미지 경로에서 파일 이름만 추출
+                img1_name = os.path.basename(img1)
+                img2_name = os.path.basename(img2)
+                item = QListWidgetItem(f"{img1_name} <-> {img2_name} (삭제됨)")
                 self.list_duplicates.addItem(item)
         else:
             self.list_duplicates.addItem("중복된 이미지가 없습니다.")
