@@ -18,7 +18,7 @@
 
 #### 필요한 라이브러리를 설치합니다.
 ```
-pip install -r requirements.txt
+pip install -r requirement.txt
 ```
 #### 라이브러리
 ![PyQt5](https://img.shields.io/badge/PyQt5-00FF00)
