@@ -21,14 +21,13 @@
 pip install -r requirements.txt
 ```
 #### 라이브러리
-- PyQt5
-- Selenium
-- chromedriver-autoinstaller
-- requests
-- OpenCV
-- pandas
-- numpy
-- Pillow(PIL)
+![PyQt5](https://img.shields.io/badge/PyQt5-00FF00)
+![Selenium](https://img.shields.io/badge/Selenium-2E9AFE)
+![requests](https://img.shields.io/badge/requests-848484)
+![OpenCV](https://img.shields.io/badge/OpenCV-FF0000)
+![pandas](https://img.shields.io/badge/pandas-380B61)
+![numpy](https://img.shields.io/badge/numpy-01A9DB)
+![Pillow(PIL)](https://img.shields.io/badge/Pillow-81BEF7)
 
 ### 사용법
 
