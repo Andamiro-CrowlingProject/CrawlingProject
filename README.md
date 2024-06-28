@@ -32,7 +32,7 @@ pip install -r requirements.txt
 
 ### 사용법
 
-- 프로그램 실행을 실행합니다.
+- 프로그램 파일을 실행합니다.
 ```
 python CrawlingGUI.py
 ```
