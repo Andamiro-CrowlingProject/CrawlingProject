@@ -13,8 +13,8 @@
 
 ### 사전 준비
 #### 실행하기 전 다음을 설치했는지 확인하시길 바랍니다.
-- Python 3.6+
-- 나머지 라이브러리 : requirements.txt를 확인하세요
+- Python version : Python 3.6+
+- Libraries version : requirement.txt를 확인하세요
 
 #### 필요한 라이브러리를 설치합니다.
 ```
