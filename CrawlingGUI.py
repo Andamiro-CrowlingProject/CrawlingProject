@@ -10,7 +10,6 @@ import webbrowser
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel, QTextEdit, QFrame, QApplication, QDialog, QHBoxLayout)
 from PyQt5.QtGui import QGuiApplication, QTextCursor
-from PyQt5.QtCore import QTimer
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
@@ -26,7 +25,6 @@ import requests
 import cv2
 from itertools import combinations
 from PIL import Image 
-from itertools import combinations
 
 
 class GoogleCrawling:
