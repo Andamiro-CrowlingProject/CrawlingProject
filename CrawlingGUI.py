@@ -1,12 +1,16 @@
 import sys
+import os
+import time
+import csv
+import pandas as pd
+import numpy as np
+import base64
+
 import webbrowser
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLineEdit, QPushButton, QLabel, QTextEdit, QFrame, QApplication, QDialog, QHBoxLayout)
-
 from PyQt5.QtGui import QGuiApplication, QTextCursor
 from PyQt5.QtCore import QTimer
-
-import requests
 
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, ElementClickInterceptedException
@@ -20,21 +24,9 @@ import requests
 
 
 import cv2
-# from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
-# from tensorflow.keras.preprocessing import image
-# from sklearn.metrics.pairwise import cosine_similarity
 from itertools import combinations
 from PIL import Image 
-import os
 from itertools import combinations
-
-import sys
-import os
-import time
-import csv
-import pandas as pd
-import numpy as np
-import base64
 
 
 class GoogleCrawling:
